@@ -45,7 +45,6 @@ InputAction :: enum {
 
 input_buffer_time :: 0.2
 input_buffers: [InputAction]f32
-key_repeat_timers: [512]f32
 
 main :: proc() {
 	rl.SetConfigFlags({.VSYNC_HINT, .MSAA_4X_HINT})
@@ -64,8 +63,8 @@ main :: proc() {
 			}
 		}
 
-		if is_key_pressed_repeat(.LEFT) do input_buffers[.Left] = input_buffer_time
-		if is_key_pressed_repeat(.RIGHT) do input_buffers[.Right] = input_buffer_time
+		if rl.IsKeyPressed(.LEFT) || rl.IsKeyPressedRepeat(.LEFT) do input_buffers[.Left] = input_buffer_time
+		if rl.IsKeyPressed(.RIGHT) || rl.IsKeyPressedRepeat(.RIGHT) do input_buffers[.Right] = input_buffer_time
 		if rl.IsKeyPressed(.SPACE) do input_buffers[.HardDrop] = input_buffer_time
 		if rl.IsKeyPressed(.UP) || rl.IsKeyPressed(.X) do input_buffers[.RotateCW] = input_buffer_time
 		if rl.IsKeyPressed(.Z) do input_buffers[.RotateCCW] = input_buffer_time
@@ -443,28 +442,6 @@ spawn_new_piece :: proc() {
 		lock_reset_count = 0
 		can_hold = true
 	}
-}
-
-is_key_pressed_repeat :: proc(key: rl.KeyboardKey, das: f32 = 0.3, arr: f32 = 0.05) -> bool {
-	key_idx := int(key)
-	if key_idx < 0 || key_idx >= 512 do return rl.IsKeyPressed(key)
-
-	if rl.IsKeyPressed(key) {
-		key_repeat_timers[key_idx] = das
-		return true
-	}
-
-	if rl.IsKeyDown(key) {
-		key_repeat_timers[key_idx] -= rl.GetFrameTime()
-		if key_repeat_timers[key_idx] <= 0.0 {
-			key_repeat_timers[key_idx] += arr
-			return true
-		}
-	} else {
-		key_repeat_timers[key_idx] = 0.0
-	}
-
-	return false
 }
 
 draw_text_centered :: proc(text: cstring, pos: rl.Vector2, size: f32, color: rl.Color) {
